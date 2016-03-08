@@ -4,12 +4,16 @@ project(spiral)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS
+find_package(
+catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
-  cereal_port
   message_generation
+  pixy_node
+  altitude_sensor
+pixy_node
 )
+
 
 ################################################
 ## Declare ROS messages, services and actions ##
@@ -37,10 +41,9 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## Generate messages in the 'msg' folder
 # add_message_files(
-#  FILES
-#   sensor_data.msg
-#   Message2.msg
-# )
+#   FILES sensor_data.msg
+
+ #)
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -57,11 +60,12 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs  
+ generate_messages(
+   DEPENDENCIES
+   std_msgs  
+   altitude_sensor
   
-# )
+ )
 
 ###################################
 ## catkin specific configuration ##
@@ -73,14 +77,10 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-INCLUDE_DIRS include
-#  LIBRARIES altitude_sensor
   CATKIN_DEPENDS 
 	roscpp
-  	cereal_port
   	std_msgs
-	#message_runtime
-#  DEPENDS system_lib
+	message_runtime
 )
 
 ###########
@@ -90,11 +90,11 @@ INCLUDE_DIRS include
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 # include_directories(include)
-include_directories(include
-  ${catkin_INCLUDE_DIRS} ${modular_lib_pkg_INCLUDE_DIRS} ${cereal_port_INCLUDE_DIRS} 
-)
+#include_directories(include
+#  ${catkin_INCLUDE_DIRS} ${modular_lib_pkg_INCLUDE_DIRS} ${cereal_port_INCLUDE_DIRS} 
+#)
 
-link_directories(${CATKIN_DEVEL_PREFIX}/lib})
+#link_directories(${CATKIN_DEVEL_PREFIX}/lib})
 
 ## Declare a cpp library
 # add_library(altitude_sensor
@@ -106,11 +106,12 @@ link_directories(${CATKIN_DEVEL_PREFIX}/lib})
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-# add_dependencies(altitude_sensor_node altitude_sensor_generate_messages_cpp)
+add_dependencies(spiral_node ${catkin_EXPORTED_TARGETS})
+add_dependencies(spiral_node ${${PROJECT_NAME}_EXPORTED_TARGETS})
 
-## Specify libraries to link a library or executable target against
+# Specify libraries to link a library or executable target against
  target_link_libraries(spiral_node
-   ${catkin_LIBRARIES} ${modular_lib_pkg_LIBRARIES} ${cereal_port_LIBRARIES} ftd2xx
+   ${catkin_LIBRARIES} ${modular_lib_pkg_LIBRARIES}
  )
 
 #target_link_libraries(spiral ${CMAKE_SOURCE_DIR}/include/ftd2xx.a)
@@ -137,11 +138,11 @@ link_directories(${CATKIN_DEVEL_PREFIX}/lib})
 # )
 
 ## Mark cpp header files for installation
- install(DIRECTORY include/${PROJECT_NAME}/
-   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-   FILES_MATCHING PATTERN "*.h"
-   PATTERN ".svn" EXCLUDE
- )
+# install(DIRECTORY include/${PROJECT_NAME}/
+#   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+#   FILES_MATCHING PATTERN "*.h"
+#   PATTERN ".svn" EXCLUDE
+# )
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
 # install(FILES

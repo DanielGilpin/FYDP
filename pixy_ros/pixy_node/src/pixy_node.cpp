@@ -44,7 +44,7 @@
 #define PIXY_RCS_PAN_CHANNEL        0
 #define PIXY_RCS_TILT_CHANNEL       1
 #define PIXY_RCS_CENTER_POS 500
-#define PIXY_RCS_MAX_X 999
+#define PIXY_RCS_MAX_X 1000
 #define PIXY_RCS_MIN_X 1
 #define PIXY_RCS_MAX_Y 1000
 #define PIXY_RCS_MIN_Y 0
@@ -56,7 +56,7 @@
 #define TILT_PROPORTIONAL_GAIN    500
 #define TILT_DERIVATIVE_GAIN      400
 
-   int     pixy_init_status;
+  int     pixy_init_status;
   char    buf[128];
   int     frame_index = 0;
   int     result;
@@ -164,7 +164,7 @@ PixyNode::PixyNode() :
 		node_handle_(),
 		private_node_handle_("~"),
 		use_servos_(true),
-		rate_(1)
+		rate_(20)
 {
 
 	private_node_handle_.param<std::string>(std::string("frame_id"), frame_id,
@@ -204,74 +204,69 @@ void PixyNode::update()
 	// if(!pixy_blocks_are_new() )
 	// {
 		// Get blocks from Pixy //
-		int blocks_copied = pixy_get_blocks(BLOCK_BUFFER_SIZE, blocks);
+	int blocks_copied = pixy_get_blocks(BLOCK_BUFFER_SIZE, blocks);
 
-		pixy_node::PixyData data;
+	pixy_node::PixyData data;
 
-		if (blocks_copied > 0)
+	if (blocks_copied > 0)
+	{
+		data.header.stamp = ros::Time::now();
+		for (int i = 0; i < blocks_copied; i++)
 		{
-			data.header.stamp = ros::Time::now();
-			for (int i = 0; i < blocks_copied; i++)
-			{
-				pixy_node::PixyBlock pixy_block;
-				pixy_block.type = blocks[i].type;
-				pixy_block.signature = blocks[i].signature;
-				pixy_block.roi.x_offset = blocks[i].x;
-				pixy_block.roi.y_offset = blocks[i].y;
-				pixy_block.roi.height = blocks[i].height;
-				pixy_block.roi.width = blocks[i].width;
-				pixy_block.roi.do_rectify = false;
-				pixy_block.angle =
-						(pixy_block.type == TYPE_COLOR_CODE) ?
-								angles::from_degrees((double) blocks[i].angle) :
-								0.0;
+			pixy_node::PixyBlock pixy_block;
+			pixy_block.type = blocks[i].type;
+			pixy_block.signature = blocks[i].signature;
+			pixy_block.roi.x_offset = blocks[i].x;
+			pixy_block.roi.y_offset = blocks[i].y;
+			pixy_block.roi.height = blocks[i].height;
+			pixy_block.roi.width = blocks[i].width;
+			pixy_block.roi.do_rectify = false;
+			pixy_block.angle =
+					(pixy_block.type == TYPE_COLOR_CODE) ?
+							angles::from_degrees((double) blocks[i].angle) :
+							0.0;
+			data.blocks.push_back(pixy_block);
+		}
+//****************************************************************************************************
+		//Pan/tilt stuff
 
-				data.blocks.push_back(pixy_block);
-			}
-	//****************************************************************************************************
-			//Pan/tilt stuff
-
-			if (data.blocks[0].roi.height>15){
+		//if (data.blocks[0].roi.height>15){
 			pan_error  = 160 - data.blocks[0].roi.x_offset ;
-			ROS_INFO("Error[%d]", pan_error);
-	      tilt_error = data.blocks[0].roi.y_offset - PIXY_Y_CENTER;
+			//ROS_INFO("Error[%d]", pan_error);
+		    tilt_error = data.blocks[0].roi.y_offset - PIXY_Y_CENTER;
 
-	      // Apply corrections to the pan/tilt with the goal //
-	      // of putting the target in the center of          //
-	      // Pixy's focus.                                   //
+		    // Apply corrections to the pan/tilt with the goal //
+		    // of putting the target in the center of          //
+		    // Pixy's focus.                                   //
 
-	      gimbal_update(&pan, pan_error);
-	      gimbal_update(&tilt, tilt_error);
+		    gimbal_update(&pan, pan_error);
+		    gimbal_update(&tilt, tilt_error);
 
-	      result = pixy_rcs_set_position(PIXY_RCS_PAN_CHANNEL, pan.position);
+		    result = pixy_rcs_set_position(PIXY_RCS_PAN_CHANNEL, pan.position);
 
-	      ROS_INFO("Actual Pan Position [%d]", pixy_rcs_get_position(0));
-	      ROS_INFO("Commanded Pan Position [%d]", pan.position);
+		    //ROS_INFO("Actual Pan Position [%d]", pixy_rcs_get_position(0));
+		    //ROS_INFO("Commanded Pan Position [%d]", pan.position);
+		      
+		    if (result < 0) {
+			    printf("Error: pixy_rcs_set_position() [%d] ", result);
+		        pixy_error(result);
+		        fflush(stdout);
+		    }
 
-	      
-	      if (result < 0) {
-	        printf("Error: pixy_rcs_set_position() [%d] ", result);
-	        pixy_error(result);
-	        fflush(stdout);
-	      }
-
-	      // result = pixy_rcs_set_position(PIXY_RCS_TILT_CHANNEL, tilt.position);
-	      // if (result<0) {
-	      //   printf("Error: pixy_rcs_set_position() [%d] ", result);
-	      //   pixy_error(result);
-	      //   fflush(stdout);
-	      // }
-	  }
-
-		}
-		else if(blocks_copied < 0)
-		{
-			ROS_INFO("Pixy read error.");
-			return;
-		}
+			// result = pixy_rcs_set_position(PIXY_RCS_TILT_CHANNEL, tilt.position);
+			// if (result<0) {
+			//   printf("Error: pixy_rcs_set_position() [%d] ", result);
+			//   pixy_error(result);
+			//   fflush(stdout);
+			// }
+		//}
+	}
+	else if(blocks_copied < 0)
+	{
+		ROS_INFO("Pixy read error.");
+		return;
+	}
 	// }
-
-
 	// publish the message
 	publisher_.publish(data);
 
@@ -282,6 +277,8 @@ void PixyNode::update()
 	servoData.position = pixy_rcs_get_position(0);
 
 	servo_publisher_.publish(servoData);
+
+	
 }
 
 
@@ -303,7 +300,7 @@ int main(int argc, char** argv)
 
 	ROS_INFO("PixyNode for ROS");
 	initialize_gimbals();
-	pixy_rcs_set_position(0, pan.position);
+	pixy_rcs_set_position(0, pan.position);//pan.position
 	PixyNode myPixy;
 	myPixy.spin();
 	
