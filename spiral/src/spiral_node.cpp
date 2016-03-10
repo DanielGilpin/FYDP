@@ -41,7 +41,7 @@ int main(int argc, char** argv) {
 	ros::NodeHandle nh;
 	
     //creating a publisher for the position
-
+ 
     //Creating a subscriber for the angle and distance
     ros::Subscriber distance_sub = nh.subscribe("/altitude", 20, distanceCallback);
 
@@ -69,9 +69,9 @@ int main(int argc, char** argv) {
 		position_msg.position.y = y_pos;
 
 
-		if (abs(position_msg.position.x) <1 && abs(position_msg.position.y-5)<1){
-			ROS_INFO("FIRE");
-		}
+		// if (abs(position_msg.position.x) <1 && abs(position_msg.position.y-5)<1){
+		// 	ROS_INFO("FIRE");
+		// }
 
 		Pose_pub.publish(position_msg);
 

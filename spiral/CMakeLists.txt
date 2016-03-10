@@ -6,12 +6,12 @@ project(spiral)
 ## is used, also find other catkin packages
 find_package(
 catkin REQUIRED COMPONENTS
+altitude_sensor
+message_generation
+  pixy_node
   roscpp
   std_msgs
-  message_generation
-  pixy_node
-  altitude_sensor
-pixy_node
+
 )
 
 
@@ -62,8 +62,9 @@ pixy_node
 ## Generate added messages and services with any dependencies listed here
  generate_messages(
    DEPENDENCIES
-   std_msgs  
+   
    altitude_sensor
+std_msgs  
   
  )
 
@@ -78,9 +79,10 @@ pixy_node
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   CATKIN_DEPENDS 
+	message_runtime
 	roscpp
   	std_msgs
-	message_runtime
+	
 )
 
 ###########
