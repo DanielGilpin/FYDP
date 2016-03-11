@@ -17,23 +17,23 @@ const double degreesPerServo = 0.147540984; //90/610
 double x_pos =0;
 double y_pos = 0;
 
-Eigen::MatrixXf A(2,2);
-Eigen::MatrixXf B(2,2);
+Eigen::MatrixXf A(4,4);
+Eigen::MatrixXf B(4,4);
 
-Eigen::MatrixXf R(2,2);
+Eigen::MatrixXf R(4,4);
 Eigen::MatrixXf Q(2,2);
 
-Eigen::MatrixXf Ht(2,2);
+Eigen::MatrixXf Ht(2,4);
 
-Eigen::MatrixXf Ke(2,2);
-Eigen::MatrixXf S(2,2);
-Eigen::MatrixXf Sp(2,2);
+Eigen::MatrixXf Ke(4,4);
+Eigen::MatrixXf S(4,4);
+Eigen::MatrixXf Sp(4,4);
 
-Eigen::MatrixXf I(2,2);
+Eigen::MatrixXf I(4,4);
 
-Eigen::MatrixXf u(2,1);
-Eigen::MatrixXf mu(2,1);
-Eigen::MatrixXf mup(2,1);
+Eigen::MatrixXf u(4,1);
+Eigen::MatrixXf mu(4,1);
+Eigen::MatrixXf mup(4,1);
 Eigen::MatrixXf y(2,1);
 Eigen::MatrixXf temp(2,1);
 
@@ -44,12 +44,14 @@ float dt = 0.05;
 
 
 void distanceCallback(const altitude_sensor::sensor_data::ConstPtr& msg){
-    y(0,0) = msg->altitude;
+    distance = msg->altitude;
+    //y(0,0) = msg->altitude;
     //ROS_INFO("Distance: [%f]", distance);
 }
 
 void angleCallback(const pixy_node::Servo::ConstPtr& msg){
-    y(1,0) = (msg->position - servoOffset)*degreesPerServo*3.14159/180.0;
+    servo_ang = (msg->position - servoOffset)*degreesPerServo*3.14159/180.0;
+    //y(1,0) = (msg->position - servoOffset)*degreesPerServo*3.14159/180.0;
     //ROS_INFO("Angle: [%d]", angle);
 }
 
@@ -59,22 +61,38 @@ void angleCallback(const pixy_node::Servo::ConstPtr& msg){
 
 int main(int argc, char** argv) {
 
-	A << 1,0,0,1;
-	B << dt,0,0,dt;
+	A << 1,dt,0,0,
+		 0,1,0,0,
+		 0,0,1,dt,
+		 0,0,0,1;
+	B << 0,0,0,0,
+		 0,1,0,0,
+		 0,0,0,0,
+		 0,0,0,1;
 
 	//ROS_INFO("[%f], [%f],[%f],[%f]", A(0,0), A(0,1), A(1,0), A(1,1));
 
-	R << 1,0,0,1;
+	R << 1,0,0,0,
+		 0,1,0,0,
+		 0,0,1,0,
+		 0,0,0,1;
 	R = R*0.000001;
 	Q <<1,0,0,1;
 	Q = Q*0.000001;
 
-	S <<1,0,0,1;
+	S << 1,0,0,0,
+		 0,1,0,0,
+		 0,0,1,0,
+		 0,0,0,1;
 	S = S*0.001;
-	I <<1,0,0,1;
 
-	u << 0,2;
-	mu << 2,2;
+	I << 1,0,0,0,
+		 0,1,0,0,
+		 0,0,1,0,
+		 0,0,0,1;
+
+	u << 0,0,0,0;
+	mu << 0,0,2,0;
 
     //creating the node
 	ros::init(argc, argv, "spiral_node");
@@ -99,37 +117,50 @@ int main(int argc, char** argv) {
 
 	
 	while(ros::ok()) {
-		//ROS_INFO("Distance: [%f]      Angle: [%f]", distance, servo_ang);
+		ROS_INFO("Distance: [%f]      Angle: [%f]", distance, servo_ang);
 		//ROS_INFO("X: [%f]      Y: [%f]", distance*cos(servo_ang*3.14159/180), distance*sin(servo_ang*3.14159/180));
 
-		// x_pos = distance*cos(servo_ang*3.14159/180);
-		// y_pos = distance*sin(servo_ang*3.14159/180);
+ros::spinOnce();
 
-		ros::spinOnce();
+		x_pos = distance*cos(servo_ang);
+		y_pos = distance*sin(servo_ang);
 
-
-		mup = A*mu + B*u;
-		Sp = A*S*A.transpose() + R;
-
-		Ht(0,0) = mup(0,0)/(sqrt(pow(mup(0,0),2) + pow(mup(1,0),2)));
-		Ht(0,1) = mup(1,0)/(sqrt(pow(mup(0,0),2) + pow(mup(1,0),2)));
-		Ht(1,0) = -pow(mup(0,0),2)/(1 + pow(mup(1,0)/mup(0,0),2));
-		Ht(1,1) = 1/(1 + pow(mup(1,0)/mup(0,0),2));
-
-		Ke = Sp*(Ht.transpose())*((Ht*Sp*Ht.transpose() + Q).inverse());
+		
 
 
-		temp(0,0) = sqrt(pow(mup(0,0),2) + pow(mup(1,0),2));
+// 		mup = A*mu + B*u;
+// 		Sp = A*S*A.transpose() + R;
 
-		temp(1,0) = atan2(mup(1,0),mup(0,0));
-//ROS_INFO ("HIT");
+// 		Ht(0,0) = mup(0,0)/(sqrt(pow(mup(0,0),2) + pow(mup(2,0),2)));
+// 		Ht(0,1) = 0; 
+// 		Ht(0,2) = mup(2,0)/(sqrt(pow(mup(0,0),2) + pow(mup(2,0),2)));
+// 		Ht(0,3) = 0;
+// 		Ht(1,0) = -pow(mup(0,0),2)/(1 + pow(mup(2,0)/mup(0,0),2));
+// 		Ht(1,1) = 0; 
+// 		Ht(1,2) = 1/(1 + pow(mup(2,0)/mup(0,0),2));
+// 		Ht(1,3) = 0;		
 
-		mu = mup + Ke*(y - temp);
+// 		Ke = Sp*(Ht.transpose())*((Ht*Sp*Ht.transpose() + Q).inverse());
 
-		S = (I - Ke*Ht)*Sp;
+// 		temp(0,0) = sqrt(pow(mup(0,0),2) + pow(mup(1,0),2));
+// 		temp(1,0) = atan2(mup(1,0),mup(0,0));
+// //ROS_INFO ("HIT");
 
-		position_msg.position.x = mu(0,0);
-		position_msg.position.y = mu(1,0);
+// 		mu = mup + Ke*(y - temp);
+
+// 		S = (I - Ke*Ht)*Sp;
+
+// 		position_msg.position.x = mu(0,0);
+// 		position_msg.position.y = mu(2,0);
+
+// 		position_msg.orientation.x = mu(1,0);
+// 		position_msg.orientation.y = mu(3,0);
+
+
+		position_msg.position.x = x_pos;
+		position_msg.position.y = y_pos;
+
+
 
 
 
