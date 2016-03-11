@@ -51,8 +51,8 @@
 
 
 // PID control parameters //
-#define PAN_PROPORTIONAL_GAIN     400
-#define PAN_DERIVATIVE_GAIN       300
+#define PAN_PROPORTIONAL_GAIN     500  // Pixymon Value = 500
+#define PAN_DERIVATIVE_GAIN       600  // Pixymon Value = 600
 #define TILT_PROPORTIONAL_GAIN    500
 #define TILT_DERIVATIVE_GAIN      400
 
@@ -245,7 +245,7 @@ void PixyNode::update()
 		    result = pixy_rcs_set_position(PIXY_RCS_PAN_CHANNEL, pan.position);
 
 		    //ROS_INFO("Actual Pan Position [%d]", pixy_rcs_get_position(0));
-		    //ROS_INFO("Commanded Pan Position [%d]", pan.position);
+		    // ROS_INFO("Commanded Pan Position [%d]", pan.position);
 		      
 		    if (result < 0) {
 			    printf("Error: pixy_rcs_set_position() [%d] ", result);
@@ -300,8 +300,9 @@ int main(int argc, char** argv)
 
 	ROS_INFO("PixyNode for ROS");
 	initialize_gimbals();
-	pixy_rcs_set_position(0, pan.position);//pan.position
+	
 	PixyNode myPixy;
+	pixy_rcs_set_position(0, 635);//pan.position
 	myPixy.spin();
 	
 

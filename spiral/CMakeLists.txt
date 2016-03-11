@@ -4,15 +4,19 @@ project(spiral)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
+find_package(catkin REQUIRED cmake_modules)
+find_package(Eigen REQUIRED)
 find_package(
+
 catkin REQUIRED COMPONENTS
 altitude_sensor
 message_generation
   pixy_node
   roscpp
   std_msgs
-
 )
+
+
 
 
 ################################################
@@ -82,6 +86,7 @@ catkin_package(
 	message_runtime
 	roscpp
   	std_msgs
+DEPENDS Eigen
 	
 )
 
@@ -95,6 +100,7 @@ catkin_package(
 #include_directories(include
 #  ${catkin_INCLUDE_DIRS} ${modular_lib_pkg_INCLUDE_DIRS} ${cereal_port_INCLUDE_DIRS} 
 #)
+include_directories(${Eigen_INCLUDE_DIRS})
 
 #link_directories(${CATKIN_DEVEL_PREFIX}/lib})
 
@@ -113,8 +119,9 @@ add_dependencies(spiral_node ${${PROJECT_NAME}_EXPORTED_TARGETS})
 
 # Specify libraries to link a library or executable target against
  target_link_libraries(spiral_node
-   ${catkin_LIBRARIES} ${modular_lib_pkg_LIBRARIES}
+   ${catkin_LIBRARIES} ${modular_lib_pkg_LIBRARIES} ${Eigen_LIBRARIES}
  )
+
 
 #target_link_libraries(spiral ${CMAKE_SOURCE_DIR}/include/ftd2xx.a)
 
