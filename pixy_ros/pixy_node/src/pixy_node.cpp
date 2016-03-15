@@ -24,6 +24,7 @@
 #include <pixy_node/PixyData.h>
 #include <pixy_node/PixyBlock.h>
 #include <pixy_node/Servo.h>
+#include <std_msgs/Float32.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -171,7 +172,7 @@ PixyNode::PixyNode() :
 			std::string("pixy_frame"));
 
 	double rate;
-	private_node_handle_.param("rate", rate, 1000.0);
+	private_node_handle_.param("rate", rate, 500.0);
 	rate_=ros::Rate(rate);
 
     private_node_handle_.param("use_servos", use_servos_, false); 
@@ -189,7 +190,7 @@ PixyNode::PixyNode() :
 		ROS_BREAK();
 	}
     publisher_ = node_handle_.advertise<pixy_node::PixyData>("block_data", 50.0);
-    servo_publisher_ = node_handle_.advertise<pixy_node::Servo>("servo", 50.0);
+    servo_publisher_ = node_handle_.advertise<std_msgs::Float32>("servo", 50.0);
 
 
 }
@@ -272,9 +273,8 @@ void PixyNode::update()
 
 	//*******************************************************************************
 	//Read the servo angle for channel 0 (pan) and publish it under servo
-	pixy_node::Servo servoData;
-	servoData.channel = 0;
-	servoData.position = pixy_rcs_get_position(0);
+	std_msgs::Float32 servoData;
+	servoData.data = (pixy_rcs_get_position(0)-20)*0.147540984;
 
 	servo_publisher_.publish(servoData);
 

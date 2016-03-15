@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(dynamic_tutorials)
+project(user_input)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -9,6 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
 )
+
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -130,18 +131,18 @@ include_directories(
 # add_dependencies(dynamic_tutorials ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
- add_executable(example_node nodes/server.cpp)
+ add_executable(user_input_node nodes/server.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-add_dependencies(example_node ${PROJECT_NAME}_gencfg)
+add_dependencies(user_input_node ${PROJECT_NAME}_gencfg)
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(dynamic_tutorials_node
 #   ${catkin_LIBRARIES}
 # )
 
-target_link_libraries(example_node ${catkin_LIBRARIES})
+target_link_libraries(user_input_node ${catkin_LIBRARIES})
 
 #############
 ## Install ##

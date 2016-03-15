@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
 	
 
     //setting default device path for the sensor
-	nh.param("serial_port", serial_port, std::string("/dev/ttyUSB0"));
+	nh.param("serial_port", serial_port, std::string("/dev/ttyUSB1"));
 	
 
 
